@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Prometheus监控系统 | Gridea</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://xiaostudentqaq.github.io/favicon.ico?v=1706189538002">
+<link rel="stylesheet" href="https://xiaostudentqaq.github.io/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="一、特点
+
+易于管理
+➢ Prometheus 核心部分只有一个单独的二进制文件，不存在任何的第三方依赖(数据库，缓存等等)。唯一需要的就是本地磁盘，因此不会有潜在级联故障的风险。
+➢ Prometheus 基于 Pull 模型的架构方式，..." />
+    <meta name="keywords" content="" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://xiaostudentqaq.github.io">
+        <img src="https://xiaostudentqaq.github.io/images/avatar.png?v=1706189538002" class="site-logo">
+        <h1 class="site-title">Gridea</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="site-nav">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      温故而知新
+    </div>
+    <div class="site-footer">
+      Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://xiaostudentqaq.github.io/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">Prometheus监控系统</h2>
+            <div class="post-date">2024-01-24</div>
+            
+            <div class="post-content" v-pre>
+              <p>一、特点</p>
+<ol>
+<li>易于管理<br>
+➢ Prometheus 核心部分只有一个单独的二进制文件，不存在任何的第三方依赖(数据库，缓存等等)。唯一需要的就是本地磁盘，因此不会有潜在级联故障的风险。<br>
+➢ Prometheus 基于 Pull 模型的架构方式，可以在任何地方（本地电脑，开发环境，测试环境）搭建我们的监控系统。<br>
+➢ 对于一些复杂的情况，还可以使用 Prometheus 服务发现(Service Discovery)的能力动态管理监控目标。</li>
+<li>强大的数据模型
+<ul>
+<li>
+<p>所有采集的监控数据均以指标(metric)的形式保存在内置的时间序列数据库当中（TSDB，Time Series DB）。所有的样本除了基本的指标名称以外，还包含一组用于描述该样本特征的标签。<br>
+http_request_status{<br>
+code='200',<br>
+content_path='/api/path',<br>
+environment='produment'<br>
+} =&gt;<br>
+[value1@timestamp1,value2@timestamp2...]</p>
+<pre><code>http_request_status{ # 指标名称
+    code='200', # 维度的标签
+    content_path='/api/path2',
+    environment='produment'
+} =&gt;
+[value1@timestamp1,value2@timestamp2...] # 存储的样本值
+</code></pre>
+<p>➢ http_request_status：指标名称(Metrics Name)<br>
+➢ {code=‘200’,content_path=’/api/path’,environment=‘produment’}：表示维度的标签，基于这些 Labels 我们可以方便地对监控数据进行聚合，过滤，裁剪。<br>
+➢ [value1@timestamp1,value2@timestamp2…]：按照时间的先后顺序存储的样本值。</p>
+</li>
+</ul>
+</li>
+</ol>
+<p>二、组成</p>
+<p>普罗米修斯分为三层，分别为：采集层、存储计算层、应用层</p>
+<p>prometheus 负责从 pushgateway 和 job 中采集数据， 存储到后端 Storatge 中，可以通过PromQL 进行查询， 推送 alerts 信息到 AlertManager。 AlertManager 根据不同的路由规则进行报警通知。<br>
+<img src="hhttps://github.com/XiaoStudentQAQ/nodePicture/blob/main/Prometheus/picture/%E6%99%AE%E7%BD%97%E7%B1%B3%E4%BF%AE%E6%96%AF%E7%9A%84%E6%9E%B6%E6%9E%84.png?raw=true" alt="普罗米修斯的架构" loading="lazy"></p>
+<ol>
+<li>采集层<br>
+➢ Pushgateway：推送网关，为支持short-lived 作业提供一个推送网关。<br>
+Pushgateway：由于 Prometheus 数据采集采用 pull 方式进行设置的， 内置必须保证 prometheus server 和对应的 exporter 必须通信；当网络情况无法直接满足时，可以使用 pushgateway 来进行中转，可以通过pushgateway 将内部网络数据主动pus到gateway 里面去，而 prometheus 采用pull方式拉取 pushgateway 中数据。(将数据推给pushgateway，普罗米修斯再从pushgateway拉取)<br>
+➢ exporter：专门为一些应用开发的数据摄取组件—exporter，例如：HAProxy、StatsD、Graphite 等等。exporter 简单说是采集端，通过 http 服务的形式保留一个 url 地址，prometheus server 通过访问该 exporter 提供的 endpoint 端点，即可获取到需要采集的监控数据。(配置好访问接口，普罗米修斯拉取)</li>
+<li>存储计算层<br>
+➢ Prometheus Server，里面包含了存储引擎和计算引擎。<br>
+➢ Retrieval 组件为取数组件，它会主动从 PushGateway 或者 Exporter 拉取指标数据。<br>
+➢ Service discovery，可以动态发现要监控的目标。<br>
+➢ TSDB，数据核心存储与查询。<br>
+➢ HTTP server，对外提供 HTTP 服务。</li>
+<li>应用层<br>
+➢ AlertManager<br>
+对接Pagerduty，是一套付费的监控报警系统。可实现短信报警、5 分钟无人 ack 打电话通知、仍然无人 ack，通知值班人员 Manager…Emial，发送邮件… …<br>
+➢ 数据可视化<br>
+Prometheus build-in WebUI、Grafana、其他基于API 开发的客户端</li>
+</ol>
+<p>三、安装安装 Pushgateway</p>
+<p>Prometheus 基于 Golang 编写，编译后的软件包，不依赖于任何的第三方依赖。只需要下载对应平台的二进制包，解压并且添加基本的配置即可正常启动 Prometheus Server。</p>
+<ul>
+<li>
+<p>上传 prometheus-2.29.1.linux-amd64.tar.gz 到虚拟机的/opt/software 目录</p>
+<h1 id="解压到optmodule-目录下">解压到/opt/module 目录下：</h1>
+<p>tar  -zxvf  prometheus-2.29.1.linux-amd64.tar.gz -C /opt/module</p>
+<h1 id="修改目录名">修改目录名：</h1>
+<p>cd /opt/module<br>
+mv prometheus-2.29.1.linux-amd64 prometheus-2.29.1</p>
+<h1 id="ln-s-usrlocalprometheus-2131-usrlocalprometheus">ln -s /usr/local/prometheus-2.13.1/ /usr/local/prometheus</h1>
+<p>#mkdir /usr/local/prometheus/data</p>
+</li>
+<li>
+<p>修改配置文件prometheus.yml：</p>
+<p>scrape_configs:</p>
+<ul>
+<li>job_name: 'prometheus'<br>
+static_configs:</li>
+<li>targets: ['hadoop202:9090']</li>
+</ul>
+<h1 id="添加-pushgateway-监控配置">添加 PushGateway 监控配置</h1>
+<ul>
+<li>job_name: 'pushgateway'<br>
+static_configs:</li>
+<li>targets: ['hadoop202:9091']<br>
+labels:instance: pushgateway</li>
+</ul>
+<h1 id="添加-node-exporter-监控配置">添加 Node Exporter 监控配置</h1>
+<ul>
+<li>job_name: 'node exporter'<br>
+static_configs:</li>
+<li>targets: ['hadoop202:9100', 'hadoop203:9100', 'hadoop204:9100']</li>
+</ul>
+</li>
+<li>
+<p>配置说明</p>
+<ol>
+<li>global 配置块：此片段指定的是 prometheus 的全局配置， 比如采集间隔，抓取超时时间等。</li>
+<li>rule_files 配置块：此片段指定报警规则文件， prometheus 根据这些规则信息，会推送报警信息到alertmanager 中。</li>
+<li>
+<h2 id="scrape_configs-配置块配置采集目标相关-prometheus-监视的目标-prometheus自身的运行信息可以通过-http-访问所以prometheus-可以监控自己的运行数据-指定抓取配置prometheus-的数据采集通过此片段配置">scrape_configs 配置块：配置采集目标相关， prometheus 监视的目标。Prometheus自身的运行信息可以通过 HTTP 访问，所以Prometheus 可以监控自己的运行数据。指定抓取配置，prometheus 的数据采集通过此片段配置。</h2>
+<h2 id="job_name监控作业的名称-他的下一集是instance也就是target-static_configs表示静态目标配置就是固定从某个-target-拉取数据-一个-scrape_config-片段指定一组目标和参数-目标就是实例指定采集的端点-参数描述如何采集这些实例-主要参数如下-targets-指定监控的目标-其实就是从哪儿拉取数据-metric_path-抓取路径-默认是metrics_sd_configs-指定服务发现配置prometheus-会从-httphadoop2029090metrics-上拉取数据">➢ job_name：监控作业的名称。他的下一集是instance，也就是target<br>
+➢ static_configs：表示静态目标配置，就是固定从某个 target 拉取数据。一个 scrape_config 片段指定一组目标和参数， 目标就是实例，指定采集的端点， 参数描述如何采集这些实例， 主要参数如下<br>
+➢ targets ： 指定监控的目标， 其实就是从哪儿拉取数据。<br>
+metric_path: 抓取路径， 默认是/metrics<br>
+*_sd_configs: 指定服务发现配置<br>
+Prometheus 会从 http://hadoop202:9090/metrics 上拉取数据。</h2>
+</li>
+<li>在Prometheus的配置文件中，labels.instance 是一种标签（label）的配置，它用于指定一个用于区分监控目标实例的标签键名。这个标签键名通常用于存储一个监控目标的实例标识，比如主机名、IP地址等。</li>
+<li>自动加载配置<br>
+Prometheus 是可以在运行时自动加载配置的。启动时需要添加：–web.enable-lifecycle</li>
+</ol>
+</li>
+</ul>
+<p>四、安装 Pushgateway</p>
+<p>PushGateway 就是一个中转组件，通过配置Flink on YARN 作业将 metric 推到PushGateway，Prometheus 再从PushGateway 拉取就可以了。</p>
+<pre><code>tar  -zxvf  pushgateway-1.4.1.linux-amd64.tar.gz  -C /opt/module
+
+cd /opt/module &amp;&amp;  mv pushgateway-1.4.1.linux-amd64 pushgateway-1.4.1
+</code></pre>
+<p>五、 安装Alertmanager（可选）</p>
+<pre><code># 解压到/opt/module 目录下
+[atguigu@hadoop202  software]$  tar  -zxvf  alertmanager-0.23.0.linux-amd64.tar.gz  -C /opt/module
+
+# 修改目录名
+[atguigu@hadoop202 ~] cd /opt/module
+[atguigu@hadoop202 module] mv alertmanager-0.23.0.linux-amd64 alertmanager-0.23.0
+</code></pre>
+<p>六、安装 Node Exporter（可选）</p>
+<p>在 Prometheus 的架构设计中，Prometheus Server 主要负责数据的收集，存储并且对外提供数据查询支持，而实际的监控样本数据的收集则是由 Exporter 完成。</p>
+<p>因此为了能够监控到某些东西，如主机的CPU 使用率，我们需要使用到 Exporter。Prometheus 周期性的从 Exporter 暴露的HTTP 服务地址（通常是/metrics）拉取监控样本数据。</p>
+<pre><code># 上传 node_exporter-1.2.2.linux-amd64.tar.gz 到虚拟机的/opt/software 目录
+
+# 解压到/opt/module 目录下：
+tar  -zxvf  node_exporter-1.2.2.linux-amd64.tar.gz  -C  /opt/module
+  
+# 修改目录名：
+cd /opt/module 
+mv node_exporter-1.2.2.linux-amd64 node_exporter-1.2.2  
+
+# 启动：
+./node_exporter
+</code></pre>
+<p>通过页面查看是否成功执行：浏览器输入：http://ip:9100/metrics，可以看到当前 node exporter 获取到的当前主机的所有监控数据。</p>
+<p>七、各个组件的执行‘</p>
+<p>启 动 Prometheus Server 、 Pushgateway 、Alertmanager和Node Exporter</p>
+<pre><code># 2.5.1  Prometheus Server 目录下执行启动命令 # 后台运行 输出log
+[atguigu@hadoop202  prometheus-2.29.1]$ nohup ./prometheus
+--config.file=prometheus.yml &gt; ./prometheus.log 2&gt;&amp;1 &amp;
+
+# 2.5.2  Pushgateway 目录下执行启动命令
+[atguigu@hadoop202   pushgateway-1.4.1]$ nohup ./pushgateway --web.listen-address :9091 &gt; ./pushgateway.log 2&gt;&amp;1 &amp;
+
+# 2.5.3  在 Alertmanager 目录下启动
+[atguigu@hadoop202   alertmanager-0.23.0]$ nohup ./alertmanager --config.file=alertmanager.yml &gt; ./alertmanager.log 2&gt;&amp;1 &amp;
+
+# 2.5.4  在 Node Exporter 目录下启动
+./node_exporter
+</code></pre>
+<p>八、Prometheus的查询语言</p>
+<ol>
+<li>PromQL介绍<br>
+Prometheus 通过指标名称（metrics name）以及对应的一组标签（labelset）唯一定义一条时间序列。指标名称反映了监控样本的基本标识，而 label 则在这个基本特征上为采集到的数据提供了多种特征维度。用户可以基于这些特征维度过滤，聚合，统计从而产生新的计算后的一条时间序列。<br>
+PromQL 是 Prometheus 内置的数据查询语言，其提供对时间序列数据丰富的查询，聚合以及逻辑运算能力的支持。并且被广泛应用在Prometheus的日常应用当中，包括对数据查询、可视化、告警处理当中。</li>
+</ol>
+
+            </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://xiaostudentqaq.github.io/post/zi-ding-yi-springioc/">
+                  <h3 class="post-title">
+                    自定义SpringIOC
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+
+
+
+  </body>
+</html>

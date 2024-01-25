@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>原型模式 | Gridea</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://xiaostudentqaq.github.io/favicon.ico?v=1706189538002">
+<link rel="stylesheet" href="https://xiaostudentqaq.github.io/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="4.3.1 概述
+用一个已经创建的实例作为原型，通过复制该原型对象来创建一个和原型对象相同的新对象。
+4.3.2 结构
+原型模式包含如下角色：
+
+抽象原型类：规定了具体原型对象必须实现的的 clone() 方法。
+具体原型类：实现抽象原型类..." />
+    <meta name="keywords" content="" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://xiaostudentqaq.github.io">
+        <img src="https://xiaostudentqaq.github.io/images/avatar.png?v=1706189538002" class="site-logo">
+        <h1 class="site-title">Gridea</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="site-nav">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      温故而知新
+    </div>
+    <div class="site-footer">
+      Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://xiaostudentqaq.github.io/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">原型模式</h2>
+            <div class="post-date">2023-10-25</div>
+            
+            <div class="post-content" v-pre>
+              <p>4.3.1 概述</p>
+<p>用一个已经创建的实例作为原型，通过复制该原型对象来创建一个和原型对象相同的新对象。</p>
+<p>4.3.2 结构</p>
+<p>原型模式包含如下角色：</p>
+<ul>
+<li>抽象原型类：规定了具体原型对象必须实现的的 clone() 方法。</li>
+<li>具体原型类：实现抽象原型类的 clone() 方法，它是可被复制的对象。</li>
+<li>访问类：使用具体原型类中的 clone() 方法来复制新的对象。</li>
+</ul>
+<p>接口类图如下：<br>
+<img src="https://github.com/XiaoStudentQAQ/nodePicture/blob/main/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/%E5%8E%9F%E5%9E%8B%E6%A8%A1%E5%BC%8F.png?raw=true" alt="" loading="lazy"></p>
+<p>4.3.3 实现</p>
+<p>原型模式的克隆分为浅克隆和深克隆。</p>
+<p>浅克隆：创建一个新对象，新对象的属性和原来对象完全相同，对于非基本类型属性，仍指向原有属性所指向的对象的内存地址。</p>
+<p>深克隆：创建一个新对象，属性中引用的其他对象也会被克隆，不再指向原有对象地址。</p>
+<p>Java中的Object类中提供了 clone() 方法来实现浅克隆。 Cloneable 接口是上面的类图中的抽象原型类，而实现了Cloneable接口的子实现类就是具体的原型类。代码如下：</p>
+<p>Realizetype（具体的原型类）：</p>
+<pre><code>public class Realizetype implements Cloneable {
+
+    public Realizetype() {
+        System.out.println(&quot;具体的原型对象创建完成！&quot;);
+    }
+
+    @Override
+    protected Realizetype clone() throws CloneNotSupportedException {
+        System.out.println(&quot;具体原型复制成功！&quot;);
+        return (Realizetype) super.clone();
+    }
+}
+</code></pre>
+<p>PrototypeTest（测试访问类）：</p>
+<pre><code>public class PrototypeTest {
+    public static void main(String[] args) throws CloneNotSupportedException {
+        Realizetype r1 = new Realizetype();
+        Realizetype r2 = r1.clone();
+
+        System.out.println(&quot;对象r1和r2是同一个对象？&quot; + (r1 == r2));
+        // 此处的结果为false
+    }
+}
+</code></pre>
+<p>4.3.4 使用场景</p>
+<ul>
+<li>对象的创建非常复杂，可以使用原型模式快捷的创建对象。</li>
+<li>性能和安全要求比较高。</li>
+</ul>
+<p>4.3.5 扩展（深克隆）</p>
+<p>将上面的“三好学生”奖状的案例中Citation类的name属性修改为Student类型的属性。序列化和反序列化会破坏浅克隆，变成深克隆。代码如下：</p>
+<pre><code>//奖状类
+public class Citation implements Cloneable {
+    private Student stu;
+
+    public Student getStu() {
+        return stu;
+    }
+
+    public void setStu(Student stu) {
+        this.stu = stu;
+    }
+
+    void show() {
+        System.out.println(stu.getName() + &quot;同学：在2020学年第一学期中表现优秀，被评为三好学生。特发此状！&quot;);
+    }
+
+    @Override
+    public Citation clone() throws CloneNotSupportedException {
+        return (Citation) super.clone();
+    }
+}
+
+//学生类
+public class Student {
+    private String name;
+    private String address;
+
+    public Student(String name, String address) {
+        this.name = name;
+        this.address = address;
+    }
+
+    public Student() {
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+}
+
+//测试类
+public class CitationTest {
+    public static void main(String[] args) throws CloneNotSupportedException {
+
+        Citation c1 = new Citation();
+        Student stu = new Student(&quot;张三&quot;, &quot;西安&quot;);
+        c1.setStu(stu);
+
+        //复制奖状
+        Citation c2 = c1.clone();
+        //获取c2奖状所属学生对象
+        Student stu1 = c2.getStu();
+        stu1.setName(&quot;李四&quot;);
+
+        //判断stu对象和stu1对象是否是同一个对象
+        System.out.println(&quot;stu和stu1是同一个对象？&quot; + (stu == stu1));
+
+        c1.show();
+        c2.show();
+    }
+}
+</code></pre>
+<p>运行结果为：<br>
+<img src="https://github.com/XiaoStudentQAQ/nodePicture/blob/main/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/%E5%8E%9F%E5%9E%8B%E6%A8%A1%E5%BC%8F2.png?raw=true" alt="" loading="lazy"></p>
+<p>说明：</p>
+<pre><code>stu对象和stu1对象是同一个对象，就会产生将stu1对象中name属性值改为“李四”，两个Citation（奖状）对象中显示的都是李四。这就是浅克隆的效果，对具体原型类（Citation）中的引用类型的属性进行引用的复制。这种情况需要使用深克隆，而进行深克隆需要使用对象流。代码如下：
+
+public class CitationTest1 {
+    public static void main(String[] args) throws Exception {
+        Citation c1 = new Citation();
+        Student stu = new Student(&quot;张三&quot;, &quot;西安&quot;);
+        c1.setStu(stu);
+
+        //创建对象输出流对象
+        ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(&quot;C:\\Users\\Think\\Desktop\\b.txt&quot;));
+        //将c1对象写出到文件中
+        oos.writeObject(c1);
+        oos.close();
+
+        //创建对象出入流对象
+        ObjectInputStream ois = new ObjectInputStream(new FileInputStream(&quot;C:\\Users\\Think\\Desktop\\b.txt&quot;));
+        //读取对象
+        Citation c2 = (Citation) ois.readObject();
+        //获取c2奖状所属学生对象
+        Student stu1 = c2.getStu();
+        stu1.setName(&quot;李四&quot;);
+
+        //判断stu对象和stu1对象是否是同一个对象
+        System.out.println(&quot;stu和stu1是同一个对象？&quot; + (stu == stu1));
+
+        c1.show();
+        c2.show();
+    }
+}
+</code></pre>
+<p>运行结果为：<br>
+<img src="https://github.com/XiaoStudentQAQ/nodePicture/blob/main/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/%E5%8E%9F%E5%9E%8B%E6%A8%A1%E5%BC%8F3.png?raw=true" alt="" loading="lazy"></p>
+<p>注意：Citation类和Student类必须实现Serializable接口，否则会抛NotSerializableException异常。</p>
+
+            </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://xiaostudentqaq.github.io/post/gong-han-mo-shi/">
+                  <h3 class="post-title">
+                    工厂模式
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+
+
+
+  </body>
+</html>

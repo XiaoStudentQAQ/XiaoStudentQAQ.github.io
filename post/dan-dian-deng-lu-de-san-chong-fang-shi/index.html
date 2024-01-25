@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>单点登录的三种方式 | Gridea</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://xiaostudentqaq.github.io/favicon.ico?v=1706189538002">
+<link rel="stylesheet" href="https://xiaostudentqaq.github.io/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="一、session广播机制实现
+实现方式：session复制
+
+缺点：资源浪费
+
+二、使用cookie + redis实现
+实现方式：
+	1. 在项目中任何一个模块进行登录，登录之后，把数据放到两个地方
+	1. redis，在key：生成唯..." />
+    <meta name="keywords" content="" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://xiaostudentqaq.github.io">
+        <img src="https://xiaostudentqaq.github.io/images/avatar.png?v=1706189538002" class="site-logo">
+        <h1 class="site-title">Gridea</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="site-nav">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      温故而知新
+    </div>
+    <div class="site-footer">
+      Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://xiaostudentqaq.github.io/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">单点登录的三种方式</h2>
+            <div class="post-date">2023-09-13</div>
+            
+            <div class="post-content" v-pre>
+              <p>一、session广播机制实现</p>
+<pre><code>实现方式：session复制
+
+缺点：资源浪费
+</code></pre>
+<p>二、使用cookie + redis实现</p>
+<pre><code>实现方式：
+	1. 在项目中任何一个模块进行登录，登录之后，把数据放到两个地方
+	1. redis，在key：生成唯一的随机值，在value：用户数据
+	1. 把redis里面生成的key放到cookie里面
+	1. 访问其他模块，带着cookie进行发送，获取cookie值，到redis进行查询对比
+</code></pre>
+<p>补充：session共享</p>
+<p>用户登录后生成session，服务端将session保存在redis，然后返回set-cookie sessionId给浏览器，之后发送请求，浏览器自动带上sessionId</p>
+<p>三、使用token实现</p>
+<ol>
+<li>按照一定的规则生成字符串，字符串可以包含用户信息</li>
+<li>在项目某个模块进行登录，登录之后，按照规则生成字符串，把登录之后用户包含到生成字符串里面，把字符串返回(可以把字符串通过cookie返回或者地址栏返回)</li>
+<li>再去访问项目其他模块，每次访问在地址栏带着生成字符串，在访问模块里面获取地址栏字符串，根据字符串获取用户信息。如何可以获取到，就是登录。</li>
+</ol>
+
+            </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://xiaostudentqaq.github.io/post/ce-shi/">
+                  <h3 class="post-title">
+                    幂等解决方案
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+
+
+
+  </body>
+</html>

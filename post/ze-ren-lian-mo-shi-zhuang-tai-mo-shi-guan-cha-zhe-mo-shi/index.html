@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>责任链模式、状态模式、观察者模式 | Gridea</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://xiaostudentqaq.github.io/favicon.ico?v=1706189538002">
+<link rel="stylesheet" href="https://xiaostudentqaq.github.io/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="6.4 责任链模式
+6.4.1 概述
+在现实生活中，常常会出现这样的事例：一个请求有多个对象可以处理，但每个对象的处理条件或权限不同。例如，公司员工请假，可批假的领导有部门负责人、副总经理、总经理等，但每个领导能批准的天数不同，员工必须根据..." />
+    <meta name="keywords" content="" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://xiaostudentqaq.github.io">
+        <img src="https://xiaostudentqaq.github.io/images/avatar.png?v=1706189538002" class="site-logo">
+        <h1 class="site-title">Gridea</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="site-nav">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      温故而知新
+    </div>
+    <div class="site-footer">
+      Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://xiaostudentqaq.github.io/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">责任链模式、状态模式、观察者模式</h2>
+            <div class="post-date">2023-11-13</div>
+            
+            <div class="post-content" v-pre>
+              <p><strong>6.4 责任链模式</strong></p>
+<p>6.4.1 概述</p>
+<p>在现实生活中，常常会出现这样的事例：一个请求有多个对象可以处理，但每个对象的处理条件或权限不同。例如，公司员工请假，可批假的领导有部门负责人、副总经理、总经理等，但每个领导能批准的天数不同，员工必须根据自己要请假的天数去找不同的领导签名，也就是说员工必须记住每个领导的姓名、电话和地址等信息，这增加了难度。这样的例子还有很多，如找领导出差报销、生活中的“击鼓传花”游戏等。</p>
+<p>定义：</p>
+<p>又名职责链模式，为了避免请求发送者与多个请求处理者耦合在一起，将所有请求的处理者通过前一对象记住其下一个对象的引用而连成一条链；当有请求发生时，可将请求沿着这条链传递，直到有对象处理它为止。</p>
+<p>6.4.2 结构</p>
+<p>职责链模式主要包含以下角色:</p>
+<ul>
+<li>抽象处理者（Handler）角色：定义一个处理请求的接口，包含抽象处理方法和一个后继连接。</li>
+<li>具体处理者（Concrete Handler）角色：实现抽象处理者的处理方法，判断能否处理本次请求，如果可以处理请求则处理，否则将该请求转给它的后继者。</li>
+<li>客户类（Client）角色：创建处理链，并向链头的具体处理者对象提交请求，它不关心处理细节和请求的传递过程。</li>
+</ul>
+<p>6.4.3 案例实现</p>
+<p>现需要开发一个请假流程控制系统。请假一天以下的假只需要小组长同意即可；请假1天到3天的假还需要部门经理同意；请求3天到7天还需要总经理同意才行。</p>
+<p>类图如下：<br>
+<img src="https://github.com/XiaoStudentQAQ/nodePicture/blob/main/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/%E8%B4%A3%E4%BB%BB%E9%93%BE%E6%A8%A1%E5%BC%8F.png?raw=true" alt="" loading="lazy"></p>
+<p>代码如下：</p>
+<pre><code>//请假条
+public class LeaveRequest {
+    private String name;//姓名
+    private int num;//请假天数
+    private String content;//请假内容
+
+    public LeaveRequest(String name, int num, String content) {
+        this.name = name;
+        this.num = num;
+        this.content = content;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getNum() {
+        return num;
+    }
+
+    public String getContent() {
+        return content;
+    }
+}
+
+//处理者抽象类
+public abstract class Handler {
+    protected final static int NUM_ONE = 1;
+    protected final static int NUM_THREE = 3;
+    protected final static int NUM_SEVEN = 7;
+
+    //该领导处理的请假天数区间
+    private int numStart;
+    private int numEnd;
+
+    //领导上面还有领导
+    private Handler nextHandler;
+
+    //设置请假天数范围 上不封顶
+    public Handler(int numStart) {
+        this.numStart = numStart;
+    }
+
+    //设置请假天数范围
+    public Handler(int numStart, int numEnd) {
+        this.numStart = numStart;
+        this.numEnd = numEnd;
+    }
+
+    //设置上级领导
+    public void setNextHandler(Handler nextHandler){
+        this.nextHandler = nextHandler;
+    }
+
+    //提交请假条
+    public final void submit(LeaveRequest leave){
+        if(0 == this.numStart){
+            return;
+        }
+
+        //如果请假天数达到该领导者的处理要求
+        if(leave.getNum() &gt;= this.numStart){
+            this.handleLeave(leave);
+
+            //如果还有上级 并且请假天数超过了当前领导的处理范围
+            if(null != this.nextHandler &amp;&amp; leave.getNum() &gt; numEnd){
+                this.nextHandler.submit(leave);//继续提交
+            } else {
+                System.out.println(&quot;流程结束&quot;);
+            }
+        }
+    }
+
+    //各级领导处理请假条方法
+    protected abstract void handleLeave(LeaveRequest leave);
+}
+
+//小组长
+public class GroupLeader extends Handler {
+    public GroupLeader() {
+        //小组长处理1-3天的请假
+        super(Handler.NUM_ONE, Handler.NUM_THREE);
+    }
+
+    @Override
+    protected void handleLeave(LeaveRequest leave) {
+        System.out.println(leave.getName() + &quot;请假&quot; + leave.getNum() + &quot;天,&quot; + leave.getContent() + &quot;。&quot;);
+        System.out.println(&quot;小组长审批：同意。&quot;);
+    }
+}
+
+//部门经理
+public class Manager extends Handler {
+    public Manager() {
+        //部门经理处理3-7天的请假
+        super(Handler.NUM_THREE, Handler.NUM_SEVEN);
+    }
+
+    @Override
+    protected void handleLeave(LeaveRequest leave) {
+        System.out.println(leave.getName() + &quot;请假&quot; + leave.getNum() + &quot;天,&quot; + leave.getContent() + &quot;。&quot;);
+        System.out.println(&quot;部门经理审批：同意。&quot;);
+    }
+}
+
+//总经理
+public class GeneralManager extends Handler {
+    public GeneralManager() {
+        //部门经理处理7天以上的请假
+        super(Handler.NUM_SEVEN);
+    }
+
+    @Override
+    protected void handleLeave(LeaveRequest leave) {
+        System.out.println(leave.getName() + &quot;请假&quot; + leave.getNum() + &quot;天,&quot; + leave.getContent() + &quot;。&quot;);
+        System.out.println(&quot;总经理审批：同意。&quot;);
+    }
+}
+
+//测试类
+public class Client {
+    public static void main(String[] args) {
+        //请假条来一张
+        LeaveRequest leave = new LeaveRequest(&quot;小花&quot;,5,&quot;身体不适&quot;);
+
+        //各位领导
+        GroupLeader groupLeader = new GroupLeader();
+        Manager manager = new Manager();
+        GeneralManager generalManager = new GeneralManager();
+
+        groupLeader.setNextHandler(manager);//小组长的领导是部门经理
+        manager.setNextHandler(generalManager);//部门经理的领导是总经理
+        //之所以在这里设置上级领导，是因为可以根据实际需求来更改设置，如果实战中上级领导人都是固定的，则可以移到领导实现类中。
+
+        //提交申请
+        groupLeader.submit(leave);
+    }
+}
+</code></pre>
+<p>6.4.4 优缺点</p>
+<p>1，优点：</p>
+<ul>
+<li>降低了对象之间的耦合度<br>
+该模式降低了请求发送者和接收者的耦合度。</li>
+<li>增强了系统的可扩展性<br>
+可以根据需要增加新的请求处理类，满足开闭原则。</li>
+<li>增强了给对象指派职责的灵活性<br>
+当工作流程发生变化，可以动态地改变链内的成员或者修改它们的次序，也可动态地新增或者删除责任。</li>
+<li>责任链简化了对象之间的连接<br>
+一个对象只需保持一个指向其后继者的引用，不需保持其他所有处理者的引用，这避免了使用众多的 if 或者 if···else 语句。</li>
+<li>责任分担<br>
+每个类只需要处理自己该处理的工作，不能处理的传递给下一个对象完成，明确各类的责任范围，符合类的单一职责原则。</li>
+</ul>
+<p>2，缺点：</p>
+<ul>
+<li>不能保证每个请求一定被处理。由于一个请求没有明确的接收者，所以不能保证它一定会被处理，该请求可能一直传到链的末端都得不到处理。</li>
+<li>对比较长的职责链，请求的处理可能涉及多个处理对象，系统性能将受到一定影响。</li>
+<li>职责链建立的合理性要靠客户端来保证，增加了客户端的复杂性，可能会由于职责链的错误设置而导致系统出错，如可能会造成循环调用。</li>
+</ul>
+<p>6.4.5 源码解析</p>
+<p>在javaWeb应用开发中，FilterChain是职责链（过滤器）模式的典型应用，以下是Filter的模拟实现分析:</p>
+<ul>
+<li>
+<p>模拟web请求Request以及web响应Response<br>
+public interface Request{</p>
+<pre><code>}
+
+public interface Response{
+ 
+}
+</code></pre>
+</li>
+<li>
+<p>模拟web过滤器Filter<br>
+public interface Filter {<br>
+public void doFilter(Request req,Response res,FilterChain c);<br>
+}</p>
+</li>
+<li>
+<p>模拟实现具体过滤器<br>
+public class FirstFilter implements Filter {<br>
+@Override<br>
+public void doFilter(Request request, Response response, FilterChain chain) {</p>
+<pre><code>        System.out.println(&quot;过滤器1 前置处理&quot;);
+
+        // 先执行所有request再倒序执行所有response
+        chain.doFilter(request, response);
+
+        System.out.println(&quot;过滤器1 后置处理&quot;);
+    }
+}
+
+public class SecondFilter  implements Filter {
+    @Override
+    public void doFilter(Request request, Response response, FilterChain chain) {
+
+        System.out.println(&quot;过滤器2 前置处理&quot;);
+
+        // 先执行所有request再倒序执行所有response
+        chain.doFilter(request, response);
+
+        System.out.println(&quot;过滤器2 后置处理&quot;);
+    }
+}
+</code></pre>
+</li>
+<li>
+<p>模拟实现过滤器链FilterChain<br>
+public class FilterChain {</p>
+<pre><code>    private List&lt;Filter&gt; filters = new ArrayList&lt;Filter&gt;();
+
+    private int index = 0;
+
+    // 链式调用
+    public FilterChain addFilter(Filter filter) {
+        this.filters.add(filter);
+        return this;
+    }
+
+    public void doFilter(Request request, Response response) {
+        if (index == filters.size()) {
+            return;
+        }
+        Filter filter = filters.get(index);
+        index++;
+        filter.doFilter(request, response, this);
+    }
+}
+</code></pre>
+</li>
+<li>
+<p>测试类<br>
+public class Client {<br>
+public static void main(String[] args) {<br>
+Request  req = null;<br>
+Response res = null ;</p>
+<pre><code>        FilterChain filterChain = new FilterChain();
+        filterChain.addFilter(new FirstFilter()).addFilter(new SecondFilter());
+        filterChain.doFilter(req,res);
+    }
+}
+</code></pre>
+</li>
+</ul>
+<p><strong>6.5 状态模式</strong></p>
+<p>6.5.1 概述</p>
+<p>【例】通过按钮来控制一个电梯的状态，一个电梯有开门状态，关门状态，停止状态，运行状态。每一种状态改变，都有可能要根据其他状态来更新处理。例如，如果电梯门现在处于运行时状态，就不能进行开门操作，而如果电梯门是停止状态，就可以执行开门操作。</p>
+<p>类图如下：<br>
+<img src="https://github.com/XiaoStudentQAQ/nodePicture/blob/main/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/%E7%8A%B6%E6%80%81%E6%A8%A1%E5%BC%8F%E5%89%8D.png?raw=true" alt="" loading="lazy"></p>
+<p>代码如下：</p>
+<pre><code>public interface ILift {
+    //电梯的4个状态
+    //开门状态
+    public final static int OPENING_STATE = 1;
+    //关门状态
+    public final static int CLOSING_STATE = 2;
+    //运行状态
+    public final static int RUNNING_STATE = 3;
+    //停止状态
+    public final static int STOPPING_STATE = 4;
+
+    //设置电梯的状态
+    public void setState(int state);
+
+    //电梯的动作
+    public void open();
+    public void close();
+    public void run();
+    public void stop();
+}
+
+public class Lift implements ILift {
+    private int state;
+
+    @Override
+    public void setState(int state) {
+        this.state = state;
+    }
+
+    //执行关门动作
+    @Override
+    public void close() {
+        switch (this.state) {
+            case OPENING_STATE:
+                System.out.println(&quot;电梯关门了。。。&quot;);//只有开门状态可以关闭电梯门，可以对应电梯状态表来看
+                this.setState(CLOSING_STATE);//关门之后电梯就是关闭状态了
+                break;
+            case CLOSING_STATE:
+                //do nothing //已经是关门状态，不能关门
+                break;
+            case RUNNING_STATE:
+                //do nothing //运行时电梯门是关着的，不能关门
+                break;
+            case STOPPING_STATE:
+                //do nothing //停止时电梯也是关着的，不能关门
+                break;
+        }
+    }
+
+    //执行开门动作
+    @Override
+    public void open() {
+        switch (this.state) {
+            case OPENING_STATE://门已经开了，不能再开门了
+                //do nothing
+                break;
+            case CLOSING_STATE://关门状态，门打开:
+                System.out.println(&quot;电梯门打开了。。。&quot;);
+                this.setState(OPENING_STATE);
+                break;
+            case RUNNING_STATE:
+                //do nothing 运行时电梯不能开门
+                break;
+            case STOPPING_STATE:
+                System.out.println(&quot;电梯门开了。。。&quot;);//电梯停了，可以开门了
+                this.setState(OPENING_STATE);
+                break;
+        }
+    }
+
+    //执行运行动作
+    @Override
+    public void run() {
+        switch (this.state) {
+            case OPENING_STATE://电梯不能开着门就走
+                //do nothing
+                break;
+            case CLOSING_STATE://门关了，可以运行了
+                System.out.println(&quot;电梯开始运行了。。。&quot;);
+                this.setState(RUNNING_STATE);//现在是运行状态
+                break;
+            case RUNNING_STATE:
+                //do nothing 已经是运行状态了
+                break;
+            case STOPPING_STATE:
+                System.out.println(&quot;电梯开始运行了。。。&quot;);
+                this.setState(RUNNING_STATE);
+                break;
+        }
+    }
+
+    //执行停止动作
+    @Override
+    public void stop() {
+        switch (this.state) {
+            case OPENING_STATE: //开门的电梯已经是是停止的了(正常情况下)
+                //do nothing
+                break;
+            case CLOSING_STATE://关门时才可以停止
+                System.out.println(&quot;电梯停止了。。。&quot;);
+                this.setState(STOPPING_STATE);
+                break;
+            case RUNNING_STATE://运行时当然可以停止了
+                System.out.println(&quot;电梯停止了。。。&quot;);
+                this.setState(STOPPING_STATE);
+                break;
+            case STOPPING_STATE:
+                //do nothing
+                break;
+        }
+    }
+}
+
+public class Client {
+    public static void main(String[] args) {
+        Lift lift = new Lift();
+        lift.setState(ILift.STOPPING_STATE);//电梯是停止的
+        lift.open();//开门
+        lift.close();//关门
+        lift.run();//运行
+        lift.stop();//停止
+    }
+}
+</code></pre>
+<p>问题分析：</p>
+<ul>
+<li>使用了大量的switch…case这样的判断（if…else也是一样)，使程序的可阅读性变差。</li>
+<li>扩展性很差。如果新加了断电的状态，我们需要修改上面判断逻辑</li>
+</ul>
+<p>定义：</p>
+<p>对有状态的对象，把复杂的“判断逻辑”提取到不同的状态对象中，允许状态对象在其内部状态发生改变时改变其行为。</p>
+<p>6.5.2 结构</p>
+<p>状态模式包含以下主要角色。</p>
+<ul>
+<li>环境（Context）角色：也称为上下文，它定义了客户程序需要的接口，维护一个当前状态，并将与状态相关的操作委托给当前状态对象来处理。</li>
+<li>抽象状态（State）角色：定义一个接口，用以封装环境对象中的特定状态所对应的行为。</li>
+<li>具体状态（Concrete  State）角色：实现抽象状态所对应的行为。</li>
+</ul>
+<p>6.5.3 案例实现</p>
+<p>对上述电梯的案例使用状态模式进行改进。类图如下：<br>
+<img src="https://github.com/XiaoStudentQAQ/nodePicture/blob/main/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/%E7%8A%B6%E6%80%81%E6%A8%A1%E5%BC%8F.png?raw=true" alt="" loading="lazy"></p>
+<p>代码如下：</p>
+<pre><code>//抽象状态类
+public abstract class LiftState {
+    //定义一个环境角色，也就是封装状态的变化引起的功能变化
+    protected Context context;
+
+    public void setContext(Context context) {
+        this.context = context;
+    }
+
+    //电梯开门动作
+    public abstract void open();
+
+    //电梯关门动作
+    public abstract void close();
+
+    //电梯运行动作
+    public abstract void run();
+
+    //电梯停止动作
+    public abstract void stop();
+}
+
+//开启状态
+public class OpenningState extends LiftState {
+
+    //开启当然可以关闭了，我就想测试一下电梯门开关功能
+    @Override
+    public void open() {
+        System.out.println(&quot;电梯门开启...&quot;);
+    }
+
+    @Override
+    public void close() {
+        //状态修改
+        super.context.setLiftState(Context.closeingState);
+        //动作委托为CloseState来执行，也就是委托给了ClosingState子类执行这个动作
+        super.context.getLiftState().close();
+    }
+
+    //电梯门不能开着就跑，这里什么也不做
+    @Override
+    public void run() {
+        //do nothing
+    }
+
+    //开门状态已经是停止的了
+    @Override
+    public void stop() {
+        //do nothing
+    }
+}
+
+//运行状态
+public class RunningState extends LiftState {
+
+    //运行的时候开电梯门？你疯了！电梯不会给你开的
+    @Override
+    public void open() {
+        //do nothing
+    }
+
+    //电梯门关闭？这是肯定了
+    @Override
+    public void close() {//虽然可以关门，但这个动作不归我执行
+        //do nothing
+    }
+
+    //这是在运行状态下要实现的方法
+    @Override
+    public void run() {
+        System.out.println(&quot;电梯正在运行...&quot;);
+    }
+
+    //这个事绝对是合理的，光运行不停止还有谁敢做这个电梯？！估计只有上帝了
+    @Override
+    public void stop() {
+        super.context.setLiftState(Context.stoppingState);
+        super.context.stop();
+    }
+}
+
+//停止状态
+public class StoppingState extends LiftState {
+
+    //停止状态，开门，那是要的！
+    @Override
+    public void open() {
+        //状态修改
+        super.context.setLiftState(Context.openningState);
+        //动作委托为CloseState来执行，也就是委托给了ClosingState子类执行这个动作
+        super.context.getLiftState().open();
+    }
+
+    @Override
+    public void close() {//虽然可以关门，但这个动作不归我执行
+        //状态修改
+        super.context.setLiftState(Context.closeingState);
+        //动作委托为CloseState来执行，也就是委托给了ClosingState子类执行这个动作
+        super.context.getLiftState().close();
+    }
+
+    //停止状态再跑起来，正常的很
+    @Override
+    public void run() {
+        //状态修改
+        super.context.setLiftState(Context.runningState);
+        //动作委托为CloseState来执行，也就是委托给了ClosingState子类执行这个动作
+        super.context.getLiftState().run();
+    }
+
+    //停止状态是怎么发生的呢？当然是停止方法执行了
+    @Override
+    public void stop() {
+        System.out.println(&quot;电梯停止了...&quot;);
+    }
+}
+
+//关闭状态
+public class ClosingState extends LiftState {
+
+    @Override
+    //电梯门关闭，这是关闭状态要实现的动作
+    public void close() {
+        System.out.println(&quot;电梯门关闭...&quot;);
+    }
+
+    //电梯门关了再打开，逗你玩呢，那这个允许呀
+    @Override
+    public void open() {
+        super.context.setLiftState(Context.openningState);
+        super.context.open();
+    }
+
+
+    //电梯门关了就跑，这是再正常不过了
+    @Override
+    public void run() {
+        super.context.setLiftState(Context.runningState);
+        super.context.run();
+    }
+
+    //电梯门关着，我就不按楼层
+    @Override
+    public void stop() {
+        super.context.setLiftState(Context.stoppingState);
+        super.context.stop();
+    }
+}
+
+//环境角色
+public class Context {
+    //定义出所有的电梯状态
+    public final static OpenningState openningState = new OpenningState();//开门状态，这时候电梯只能关闭
+    public final static ClosingState closeingState = new ClosingState();//关闭状态，这时候电梯可以运行、停止和开门
+    public final static RunningState runningState = new RunningState();//运行状态，这时候电梯只能停止
+    public final static StoppingState stoppingState = new StoppingState();//停止状态，这时候电梯可以开门、运行
+
+
+    //定义一个当前电梯状态
+    private LiftState liftState;
+
+    public LiftState getLiftState() {
+        return this.liftState;
+    }
+
+    public void setLiftState(LiftState liftState) {
+        //当前环境改变
+        this.liftState = liftState;
+        //把当前的环境通知到各个实现类中
+        this.liftState.setContext(this);
+    }
+
+    public void open() {
+        this.liftState.open();
+    }
+
+    public void close() {
+        this.liftState.close();
+    }
+
+    public void run() {
+        this.liftState.run();
+    }
+
+    public void stop() {
+        this.liftState.stop();
+    }
+}
+
+//测试类
+public class Client {
+    public static void main(String[] args) {
+        Context context = new Context();
+        context.setLiftState(new ClosingState());
+
+        context.open();
+        context.close();
+        context.run();
+        context.stop();
+    }
+}
+</code></pre>
+<p>6.5.4 优缺点</p>
+<p>1，优点：</p>
+<ul>
+<li>将所有与某个状态有关的行为放到一个类中，并且可以方便地增加新的状态，只需要改变对象状态即可改变对象的行为。</li>
+<li>允许状态转换逻辑与状态对象合成一体，而不是某一个巨大的条件语句块。</li>
+</ul>
+<p>2，缺点：</p>
+<ul>
+<li>状态模式的使用必然会增加系统类和对象的个数。</li>
+<li>状态模式的结构与实现都较为复杂，如果使用不当将导致程序结构和代码的混乱。</li>
+<li>状态模式对&quot;开闭原则&quot;的支持并不太好。</li>
+</ul>
+<p>6.5.5 使用场景</p>
+<ul>
+<li>当一个对象的行为取决于它的状态，并且它必须在运行时根据状态改变它的行为时，就可以考虑使用状态模式。</li>
+<li>一个操作中含有庞大的分支结构，并且这些分支决定于对象的状态时。</li>
+</ul>
+<p><strong>6.6 观察者模式</strong></p>
+<p>6.6.1 概述</p>
+<p>定义：</p>
+<p>又被称为发布-订阅（Publish/Subscribe）模式，它定义了一种一对多的依赖关系，让多个观察者对象同时监听某一个主题对象。这个主题对象在状态变化时，会通知所有的观察者对象，使他们能够自动更新自己。</p>
+<p>6.6.2 结构</p>
+<p>在观察者模式中有如下角色：</p>
+<ul>
+<li>Subject：抽象主题（抽象被观察者），抽象主题角色把所有观察者对象保存在一个集合里，每个主题都可以有任意数量的观察者，抽象主题提供一个接口，可以增加和删除观察者对象。</li>
+<li>ConcreteSubject：具体主题（具体被观察者），该角色将有关状态存入具体观察者对象，在具体主题的内部状态发生改变时，给所有注册过的观察者发送通知。</li>
+<li>Observer：抽象观察者，是观察者的抽象类，它定义了一个更新接口，使得在得到主题更改通知时更新自己。</li>
+<li>ConcrereObserver：具体观察者，实现抽象观察者定义的更新接口，以便在得到主题更改通知时更新自身的状态。</li>
+</ul>
+<p>6.6.3 案例实现</p>
+<p>【例】微信公众号</p>
+<p>在使用微信公众号时，大家都会有这样的体验，当你关注的公众号中有新内容更新的话，它就会推送给关注公众号的微信用户端。我们使用观察者模式来模拟这样的场景，微信用户就是观察者，微信公众号是被观察者，有多个的微信用户关注了程序猿这个公众号。</p>
+<p>类图如下：<br>
+<img src="https://github.com/XiaoStudentQAQ/nodePicture/blob/main/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/%E8%A7%82%E5%AF%9F%E8%80%85%E6%A8%A1%E5%BC%8F.png?raw=true" alt="" loading="lazy"></p>
+<p>代码如下：</p>
+<p>定义抽象观察者类，里面定义一个更新的方法</p>
+<pre><code>public interface Observer {
+    void update(String message);
+}
+</code></pre>
+<p>定义具体观察者类，微信用户是观察者，里面实现了更新的方法</p>
+<pre><code>public class WeixinUser implements Observer {
+    // 微信用户名
+    private String name;
+
+    public WeixinUser(String name) {
+        this.name = name;
+    }
+    @Override
+    public void update(String message) {
+        System.out.println(name + &quot;-&quot; + message);
+    }
+}
+</code></pre>
+<p>定义抽象主题类，提供了attach、detach、notify三个方法</p>
+<pre><code>public interface Subject {
+    //增加订阅者
+    public void attach(Observer observer);
+
+    //删除订阅者
+    public void detach(Observer observer);
+    
+    //通知订阅者更新消息
+    public void notify(String message);
+}
+</code></pre>
+<p>微信公众号是具体主题（具体被观察者），里面存储了订阅该公众号的微信用户，并实现了抽象主题中的方法</p>
+<pre><code>public class SubscriptionSubject implements Subject {
+    //储存订阅公众号的微信用户
+    private List&lt;Observer&gt; weixinUserlist = new ArrayList&lt;Observer&gt;();
+
+    @Override
+    public void attach(Observer observer) {
+        weixinUserlist.add(observer);
+    }
+
+    @Override
+    public void detach(Observer observer) {
+        weixinUserlist.remove(observer);
+    }
+
+    @Override
+    public void notify(String message) {
+        for (Observer observer : weixinUserlist) {
+            observer.update(message);
+        }
+    }
+}
+</code></pre>
+<p>客户端程序</p>
+<pre><code>public class Client {
+    public static void main(String[] args) {
+        SubscriptionSubject mSubscriptionSubject=new SubscriptionSubject();
+        //创建微信用户
+        WeixinUser user1=new WeixinUser(&quot;孙悟空&quot;);
+        WeixinUser user2=new WeixinUser(&quot;猪悟能&quot;);
+        WeixinUser user3=new WeixinUser(&quot;沙悟净&quot;);
+        //订阅公众号
+        mSubscriptionSubject.attach(user1);
+        mSubscriptionSubject.attach(user2);
+        mSubscriptionSubject.attach(user3);
+        //公众号更新发出消息给订阅的微信用户
+        mSubscriptionSubject.notify(&quot;传智黑马的专栏更新了&quot;);
+    }
+}
+</code></pre>
+<p>6.6.4 优缺点</p>
+<p>1，优点：</p>
+<ul>
+<li>降低了目标与观察者之间的耦合关系，两者之间是抽象耦合关系。</li>
+<li>被观察者发送通知，所有注册的观察者都会收到信息【可以实现广播机制】</li>
+</ul>
+<p>2，缺点：</p>
+<ul>
+<li>如果观察者非常多的话，那么所有的观察者收到被观察者发送的通知会耗时</li>
+<li>如果被观察者有循环依赖的话，那么被观察者发送通知会使观察者循环调用，会导致系统崩溃</li>
+</ul>
+<p>6.6.5 使用场景</p>
+<ul>
+<li>对象间存在一对多关系，一个对象的状态发生改变会影响其他对象。</li>
+<li>当一个抽象模型有两个方面，其中一个方面依赖于另一方面时。</li>
+</ul>
+<p>6.6.6 JDK中提供的实现</p>
+<p>在 Java 中，通过 java.util.Observable 类和 java.util.Observer 接口定义了观察者模式，只要实现它们的子类就可以编写观察者模式实例。</p>
+<p>1，Observable类</p>
+<p>Observable 类是抽象目标类（被观察者），它有一个 Vector 集合成员变量，用于保存所有要通知的观察者对象，下面来介绍它最重要的 3 个方法。</p>
+<ul>
+<li>void addObserver(Observer o) 方法：用于将新的观察者对象添加到集合中。</li>
+<li>void notifyObservers(Object arg) 方法：调用集合中的所有观察者对象的 update方法，通知它们数据发生改变。通常越晚加入集合的观察者越先得到通知。</li>
+<li>void setChange() 方法：用来设置一个 boolean 类型的内部标志，注明目标对象发生了变化。当它为true时，notifyObservers() 才会通知观察者。</li>
+</ul>
+<p>2，Observer 接口</p>
+<p>Observer 接口是抽象观察者，它监视目标对象的变化，当目标对象发生变化时，观察者得到通知，并调用 update 方法，进行相应的工作。</p>
+<p>【例】警察抓小偷</p>
+<p>警察抓小偷也可以使用观察者模式来实现，警察是观察者，小偷是被观察者。代码如下：</p>
+<p>小偷是一个被观察者，所以需要继承Observable类</p>
+<pre><code>public class Thief extends Observable {
+
+    private String name;
+
+    public Thief(String name) {
+        this.name = name;
+    }
+    
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void steal() {
+        System.out.println(&quot;小偷：我偷东西了，有没有人来抓我！！！&quot;);
+        super.setChanged(); //changed  = true
+        super.notifyObservers();
+    }
+}
+</code></pre>
+<p>警察是一个观察者，所以需要让其实现Observer接口</p>
+<pre><code>public class Policemen implements Observer {
+
+    private String name;
+
+    public Policemen(String name) {
+        this.name = name;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public void update(Observable o, Object arg) {
+        System.out.println(&quot;警察：&quot; + ((Thief) o).getName() + &quot;，我已经盯你很久了，你可以保持沉默，但你所说的将成为呈堂证供！！！&quot;);
+    }
+}
+</code></pre>
+<p>客户端代码</p>
+<pre><code>public class Client {
+    public static void main(String[] args) {
+        //创建小偷对象
+        Thief t = new Thief(&quot;隔壁老王&quot;);
+        //创建警察对象
+        Policemen p = new Policemen(&quot;小李&quot;);
+        //让警察盯着小偷
+        t.addObserver(p);
+        //小偷偷东西
+        t.steal();
+    }
+}
+</code></pre>
+
+            </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://xiaostudentqaq.github.io/post/mo-ban-fang-fa-ce-lue-ming-ling-mo-shi/">
+                  <h3 class="post-title">
+                    模板方法、策略、命令模式
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+
+
+
+  </body>
+</html>

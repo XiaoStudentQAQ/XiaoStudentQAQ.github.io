@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Java 如何手写实现 AOP？ | Gridea</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://xiaostudentqaq.github.io/favicon.ico?v=1706189538002">
+<link rel="stylesheet" href="https://xiaostudentqaq.github.io/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="来自知乎大神
+最简单的方法就是使用lambda表达式，不到20行代码就能实现。
+首先定义一个AOP类，包含对象实例化和方法调用：
+/**
+ * Create with IntelliJ IDEA
+ *
+ * @author lisixian..." />
+    <meta name="keywords" content="" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://xiaostudentqaq.github.io">
+        <img src="https://xiaostudentqaq.github.io/images/avatar.png?v=1706189538002" class="site-logo">
+        <h1 class="site-title">Gridea</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="site-nav">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      温故而知新
+    </div>
+    <div class="site-footer">
+      Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://xiaostudentqaq.github.io/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">Java 如何手写实现 AOP？</h2>
+            <div class="post-date">2023-10-30</div>
+            
+            <div class="post-content" v-pre>
+              <p>来自知乎大神</p>
+<p>最简单的方法就是使用lambda表达式，不到20行代码就能实现。</p>
+<p>首先定义一个AOP类，包含对象实例化和方法调用：</p>
+<pre><code>/**
+ * Create with IntelliJ IDEA
+ *
+ * @author lisixian
+ * @Date:2023/10/30/13:51
+ * @Description:
+ */
+public class AOP {
+    // 根据传入的class对象进行实例化，相当于spring的ioc功能
+    public static &lt;T&gt; T get(Class&lt;T&gt; clazz) {
+        try {
+            return clazz.getConstructor().newInstance();
+        } catch (Exception e) {
+            throw new RuntimeException(&quot;获取实例化对象失败&quot;);
+        }
+    }
+
+    // 使用aop功能，传入一个拦截器和一个匿名方法就可以
+    public static void invoke(Interceptor interceptor, Invoke invoke) {
+        interceptor.invoke(invoke);
+    }
+}
+</code></pre>
+<p>然后定义两个接口，一个用作拦截器，一个用做方法的调用：</p>
+<pre><code>/**
+ * Create with IntelliJ IDEA
+ *
+ * @author lisixian
+ * @Date:2023/10/30/13:56
+ * @Description: 拦截器接口
+ */
+public interface Interceptor {
+    public void invoke(Invoke invoke);
+}
+
+/**
+ * Create with IntelliJ IDEA
+ *
+ * @author lisixian
+ * @Date:2023/10/30/13:58
+ * @Description: 方法调用的接口
+ */
+public interface Invoke {
+    public void invoke();
+}
+</code></pre>
+<p>这样就实现了最基本的Aop功能，也可以用做拦截器，一共18行代码。</p>
+<p>要使用洲哥Aop的方法也很简单，下面做一个演示：</p>
+<pre><code>/**
+ * Create with IntelliJ IDEA
+ *
+ * @author lisixian
+ * @Date:2023/10/30/14:37
+ * @Description: 演示类
+ */
+public class App {
+    public static void main(String[] args) {
+        Hello hello = AOP.get(Hello.class);
+        AOP.invoke(new HelloInterceptor(), hello::test);
+    }
+}
+
+// 这是一个测试类
+class Hello {
+    void test() {
+        System.out.println(&quot;测试aop是否能正常使用！！！&quot;);
+    }
+}
+
+// 使用方法也非常的简单，只需要调用invoke就可以执行匿名方法了
+// 可以定义执行方法前后的操作，异常处理只需要使用try catch即可，也可自定义异常类型
+class HelloInterceptor implements Interceptor {
+    @Override
+    public void invoke(Invoke invoke) {
+        System.out.println(&quot;执行前&quot;);
+        try {
+            invoke.invoke();
+        } catch (Exception e) {
+            System.out.println(&quot;假如出现错误&quot;);
+            throw new RuntimeException(e);
+        }
+        System.out.println(&quot;执行后&quot;);
+    }
+}
+</code></pre>
+<p>也可以用注解的方式来指定拦截器的作用范围，这里不再补充。</p>
+
+            </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://xiaostudentqaq.github.io/post/jie-gou-xing-mo-shi/">
+                  <h3 class="post-title">
+                    代理、适配器、装饰者、桥接、外观模式
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+
+
+
+  </body>
+</html>
